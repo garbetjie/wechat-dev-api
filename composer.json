@@ -1,0 +1,11 @@
+{
+  "require": {
+      "illuminate/database": "^5.2",
+      "slim/slim": "^3.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "WeChat\\MockApi\\": "app/"
+    }
+  }
+}
