@@ -11,9 +11,10 @@ use WeChat\MockApi\Middleware\AuthTokenRequired;
 
 // Build application.
 $app = new App();
+$container = $app->getContainer();
 
 // Configure the settings.
-$settings = $app[ 'settings' ];
+$settings = $container->get('settings');
 /* @var Collection $settings */
 $settings[ 'basePath' ] = __DIR__;
 $settings[ 'templatePath' ] = __DIR__ . DIRECTORY_SEPARATOR . 'templates';
@@ -32,7 +33,7 @@ $capsule = new Capsule();
 $capsule->addConnection($settings['database']);
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
-$app['db'] = $capsule;
+$container['db'] = $capsule;
 
 // Load up routes.
 $iterator = new RegexIterator(
@@ -42,7 +43,9 @@ $iterator = new RegexIterator(
 );
 
 foreach ($iterator as $file) {
-    require $file->getPathname();
+    call_user_func(function () use (&$app, $file) {
+        require $file->getPathname();
+    });
 }
 
 // Add middleware.
