@@ -10,5 +10,7 @@ class AuthTokenRequired
     public function __invoke (ServerRequestInterface $req, ResponseInterface $res, callable $next)
     {
         $next($req, $res);
+        
+        return $res;
     }
 }
