@@ -15,17 +15,19 @@ $container = $app->getContainer();
 // Configure the settings.
 $settings = $container->get('settings');
 /* @var Collection $settings */
-$settings[ 'basePath' ] = __DIR__;
-$settings[ 'templatePath' ] = __DIR__ . DIRECTORY_SEPARATOR . 'templates';
-$settings[ 'storagePath' ] = __DIR__ . DIRECTORY_SEPARATOR . 'storage';
-$settings[ 'database' ] = [
-    'driver'   => 'sqlite',
-    'database' => $settings[ 'storagePath' ] . DIRECTORY_SEPARATOR . 'db.sqlite',
-];
 
-// Load local configuration.
+// Load default configuration.
+$settings->replace(require __DIR__ . DIRECTORY_SEPARATOR . 'config.php');
+
+// Load local configuration, if supplied. Supports either returning configuration, or the settings can be manipulated
+// via the $settings collection directly.
 if (is_file(__DIR__ . DIRECTORY_SEPARATOR . 'config.local.php')) {
-    require __DIR__ . DIRECTORY_SEPARATOR . 'config.local.php';
+    call_user_func(function () use (&$settings) {
+        $config = require __DIR__ . DIRECTORY_SEPARATOR . 'config.local.php';
+        if (is_array($config)) {
+            $settings->replace($config);
+        }
+    });
 }
 
 // Configure database connection.
