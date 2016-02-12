@@ -29,8 +29,26 @@ class View
         $compiledPath = $settings['storagePath'] . DIRECTORY_SEPARATOR . 'views';
         
         $resolver = new EngineResolver();
-        $resolver->register('blade', function () use ($compiledPath) {
-            return new CompilerEngine(new BladeCompiler(new Filesystem(), $compiledPath));
+        $resolver->register('blade', function () use ($compiledPath, &$settings) {
+            $bladeCompiler = new BladeCompiler(new Filesystem(), $compiledPath);
+            
+            // Add the @webroot directive.
+            $bladeCompiler->directive('webroot', function ($expression) use (&$settings) {
+                $segments = explode(',', preg_replace("/[\(\)\\\"\']/", '', $expression));
+                $path = rtrim($settings['webrootBasePath'], '/') . '/' . ltrim($segments[0], '/');
+                $path = str_replace("'", "\\'", $path);
+                return "<?= e('{$path}') ?>";
+            });
+            
+            // Add the @route directive.
+            $bladeCompiler->directive('route', function ($expression) use (&$settings) {
+                $segments = explode(',', preg_replace("/[\(\)\\\"\']/", '', $expression));
+                $path = rtrim($settings['routeBasePath'], '/') . '/' . ltrim($segments[0], '/');
+                $path = str_replace("'", "\\'", $path);
+                return "<?= e('{$path}') ?>";
+            });
+            
+            return new CompilerEngine($bladeCompiler);
         });
         
         $finder = new FileViewFinder(new Filesystem(), [$settings['templatePath']]);
@@ -56,7 +74,7 @@ class View
         $path .= '.blade.php';
         return $this->factory->file($path, $data)->render();
     }
-
+    
     /**
      * Sends the given value as JSON encoded content.
      * 
